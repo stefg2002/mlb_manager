@@ -1,0 +1,27 @@
+"player"
+{
+    "id":,
+    "name": "name",
+    "age":,
+    "position":,
+    "bats":,
+    "throws":,
+    "contract": {
+        "total_years":,
+        "total_value":,
+        "aav":,
+        "year_signed":,
+        "year_end":,
+        "team":
+
+    },
+    "service_time":
+}
+
+"roster_assignment"
+{
+    "id":,
+    "player_id":,
+    "team_id":,
+    "role":,
+}
