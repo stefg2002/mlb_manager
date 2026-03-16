@@ -86,8 +86,12 @@ async def login(db: Annotated[AsyncSession, Depends(get_db)], form_data: Annotat
 
 @router.get("/google")
 async def get_google_user(request: Request):
-    print(request.session.get("user"))
-    return request.session.get("user")
+    user_session = request.session.get("user")
+    if not user_session:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authenticated")
+    return {
+        "session_data": user_session
+    }
 
 @router.get("/me", response_model=UserGetPrivate)
 async def get_cur_user(request: Request, current_user: CurrentUser):
