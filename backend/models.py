@@ -14,17 +14,11 @@ class Base(DeclarativeBase):
 class User(Base):
     __tablename__ = "users"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    google_id: Mapped[int] = mapped_column(Integer, unique=True, index=True, nullable=True)
+    google_id: Mapped[str] = mapped_column(String(100), unique=True, nullable=True) #only for google accounts
     username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
     email: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
-    hashed_password = mapped_column(String(255), nullable=False)
+    hashed_password = mapped_column(String(255), nullable=True) #Null if user logs in with google account
     type: Mapped[str] = mapped_column(String(25), nullable=False)
-
-class GoogleUser(Base):
-    __tablename__ = "google_users"
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=False)
-    username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
-    email: Mapped[str] = mapped_column(String(100), unique=True, nullable=False) 
 
 class Post(Base):
     __tablename__ = "posts"

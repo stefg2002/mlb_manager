@@ -5,6 +5,7 @@ import httpx
 from fastapi import FastAPI, Request, status, HTTPException
 from fastapi.exception_handlers import http_exception_handler
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.sessions import SessionMiddleware
@@ -28,7 +29,13 @@ async def lifespan(_app: FastAPI):
     await engine.dispose()
 
 app = FastAPI(lifespan=lifespan)
-app.add_middleware(SessionMiddleware, https_only=False, same_site="lax",secret_key=settings.auth.secret_key.get_secret_value())
+
+origins = [
+    "http://localhost:8000",
+    "http://localhost:5173",
+]
+
+app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 # TODO: Add routes
 
@@ -36,7 +43,7 @@ app.add_middleware(SessionMiddleware, https_only=False, same_site="lax",secret_k
 Initializes API routes
 """
 app.include_router(users.router,prefix="/api/users",tags=["Users"]) 
-app.include_router(google.router, prefix="/google", tags=["Google"])
+app.include_router(google.router, prefix="/api/google", tags=["Google"])
 
 #TODO: Add exception handling
 @app.exception_handler

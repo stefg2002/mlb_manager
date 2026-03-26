@@ -2,3 +2,7 @@
 venv/
 *.env
 api_old/
+
+backend/test.py
+
+frontend/src/assets/

@@ -60,7 +60,7 @@ async def create_user(user: UserPost, db: Annotated[AsyncSession, Depends(get_db
     if existing_email:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already in use")
 
-    db_user = models.User(username=user.username, email=user.email, hashed_password=get_password_hash(user.password))
+    db_user = models.User(username=user.username, email=user.email, hashed_password=get_password_hash(user.password), type="normal")
     db.add(db_user)
     await db.commit()
     await db.refresh(db_user)
@@ -84,14 +84,14 @@ async def login(db: Annotated[AsyncSession, Depends(get_db)], form_data: Annotat
     access_token = create_access_token(data={"sub": str(user.id)}, expires_delta=access_token_expires)
     return Token(access_token=access_token, token_type="bearer")
 
-@router.get("/google")
-async def get_google_user(request: Request):
-    user_session = request.session.get("user")
-    if not user_session:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authenticated")
-    return {
-        "session_data": user_session
-    }
+# @router.get("/google")
+# async def get_google_user(request: Request):
+#     user_session = request.session.get("user")
+#     if not user_session:
+#         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authenticated")
+#     return {
+#         "session_data": user_session
+#     }
 
 @router.get("/me", response_model=UserGetPrivate)
 async def get_cur_user(request: Request, current_user: CurrentUser):
