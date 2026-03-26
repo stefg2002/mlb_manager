@@ -71,6 +71,14 @@ async def create_user(user: UserPost, db: Annotated[AsyncSession, Depends(get_db
 async def login(db: Annotated[AsyncSession, Depends(get_db)], form_data: Annotated[OAuth2PasswordRequestForm,Depends()]):
     data = await db.execute(select(models.User).where(models.User.username == form_data.username))
     db_user = data.scalars().first()
+
+    if not db_user:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail="Incorrect username or password", 
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+
     user = authenticate_user(db_user, form_data.password)
 
     if not user:
