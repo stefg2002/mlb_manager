@@ -30,9 +30,9 @@ class UserPost(User):
 
 class UserGetPublic(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    username: UsernameMeta
     id: int
-
+    username: UsernameMeta
+    
 class UserGetPrivate(UserGetPublic):
     email: EmailMeta
 

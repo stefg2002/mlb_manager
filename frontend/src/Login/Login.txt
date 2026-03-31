@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { type ChangeEvent } from 'react';
+
 
 function Login(){
     
@@ -30,6 +32,7 @@ function Login(){
                 if(response.ok){
                     const token = await response.json();
                     localStorage.setItem('authToken', token.access_token);
+                    
                 }
             } catch (error){
                 console.error('Error:', error);
@@ -39,11 +42,11 @@ function Login(){
         }    
     };
 
-    const usernameChange = (event) => {
+    const usernameChange = (event: ChangeEvent<HTMLInputElement>) => {
         setUsername(event.target.value);
     };
 
-    const passwordChange = (event) => {
+    const passwordChange = (event: ChangeEvent<HTMLInputElement>) => {
         setPassword(event.target.value);
     };
 
@@ -79,5 +82,4 @@ function Login(){
     );
 
 }
-
 export default Login
