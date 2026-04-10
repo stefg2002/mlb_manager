@@ -1,6 +1,12 @@
 import pandas as pd
 import math
 import re
+import glob
+import os
+import requests
+from bs4 import BeautifulSoup
+from unidecode import unidecode
+
 
 def get_additional_cbt(player,extra_cbt):
     for i,value in extra_cbt.iterrows():
@@ -63,18 +69,35 @@ def get_additional_cbt(player,extra_cbt):
     #                     case _:
     #                         return 3
 
-class TeamScraper:
-    def __init__(self,name):
-        self.main_roster,self.dead_roster = self._scrape(name)
+def scrape():
+    response = requests.get('https://legacy.baseballprospectus.com/compensation/cots/')
 
-    def get_main_roster(self):
-        return self.main_roster
-    
-    def get_dead_roster(self):
-        return self.dead_roster
+    soup = BeautifulSoup(response.text,'html.parser')
 
-    def _scrape(self,name: str):
-        csv = pd.read_csv(f'{name}.csv',header=None,skiprows=9,dtype=str)
+    tables=soup.find_all('table')
+
+    ls=[]
+    for table in tables:
+        if table.find('h5', string='PROJECTED 2025 PAYROLLS'):
+            break
+
+        ls.append(table.find_all('a', href=lambda x: x and 'https://docs.google.com' in x))
+
+    a = [item for sub in ls for item in sub]
+
+    links = []
+    for link in a:
+        links.append(link.get('href'))               
+
+    contracts=pd.DataFrame()
+    for link in links:
+        
+        if '/edit' in link:
+            spreadsheet_link = link.split('/edit')[0] + '/export?format=csv'
+        elif "/pub" in link:
+            spreadsheet_link = link.split('/pub')[0] + '/pub?output=csv'
+
+        csv = pd.read_csv(spreadsheet_link,header=None,skiprows=9,dtype=str)
 
         # grab only the first box
         end = 0
@@ -83,7 +106,7 @@ class TeamScraper:
                 end=i
                 break
 
-        result = csv.iloc[:end].copy()
+        result = csv.iloc[:end].copy().drop_duplicates()
 
         #grab main roster
         main_roster = result.dropna(subset=[0,1,2])
@@ -100,40 +123,32 @@ class TeamScraper:
         extra_cbt = summary[summary[0].str.contains(",",na=False)] #only grab player names
         misc = summary[~summary[0].str.contains(",",na=False)] #Grab other information
 
-        #Players on the 40-man roster that have extra CBT calculations (either addition or subtraction)
+        #Players on the 40-man roster including extra CBT calculations (either addition or subtraction)
         ls = []
         for i,player in main_roster.iterrows():
             name_raw = " ".join(player[0].split(", ")[::-1]).replace("*","")
             name = re.sub(r'\s+[A-Z]\.?(?=\s|$)', '', name_raw, count=1)
+
+            normalized_name=re.sub(r'[^\w\s]','', unidecode(name.lower()))
+
             cbt = player[18].replace("$","").replace(",","") if isinstance(player[18],str) else "0"
             extra = get_additional_cbt(player,extra_cbt)
-            ls.append({'Name': name, 'CBT': cbt, 'Additional CBT': extra})
+            ls.append({'Name': name, 'Normalized Name': normalized_name, 'CBT': int(cbt) + int(extra)})
+            print(normalized_name)
 
         payroll = pd.DataFrame(ls)
-        payroll.sort_values(by='Name')
-        print(payroll)
-
+        
         #Non-roster CBT additions (dead money) - players with guaranteed contracts not on the 40-man roster
-        ls = []
-        for i,player in extra_cbt.iterrows():
-            if not main_roster[0].isin([player[0]]).any():
-                name = player[0]
-                cbt = player[18].replace("$","").replace(",","").replace("(","-").replace(")","") if isinstance(player[18],str) else "0"
-                ls.append({'Name': name,'CBT': cbt})
+        # ls = []
+        # for i,player in extra_cbt.iterrows():
+        #     if not main_roster[0].isin([player[0]]).any():
+        #         name = player[0]
+        #         cbt = player[18].replace("$","").replace(",","").replace("(","-").replace(")","") if isinstance(player[18],str) else "0"
+        #         ls.append({'Name': name,'CBT': cbt})
+        # dead_payroll = pd.DataFrame(ls)
 
-        dead_payroll = pd.DataFrame(ls)
+        contracts=pd.concat([contracts,payroll],ignore_index=True)
+    return contracts    
+    
 
-        # print(payroll)
 
-        return payroll,dead_payroll
-
-        # payroll_sum = sum(int(item) for item in payroll['CBT'])
-        # extra_sum = sum(int(item) for item in payroll['Additional CBT'])
-        # dead_payroll_sum = sum(int(item) for item in dead_payroll['CBT']) if not dead_payroll.empty else 0
-        # misc_sum = sum(int(item.replace('$','').replace(',','')) for item in misc[18])
-
-        # total_sum = payroll_sum+extra_sum+dead_payroll_sum+misc_sum
-
-        # years = get_years(csv[0])
-
-        # tax_bill = get_tax_bill(total_sum,years)

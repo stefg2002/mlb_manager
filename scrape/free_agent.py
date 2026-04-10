@@ -1,6 +1,7 @@
 import requests
 import pandas as pd
 
+
 res = requests.get('https://statsapi.mlb.com/api/v1/people/freeAgents?season=2025')
 
 data = res.json()['freeAgents']
@@ -11,4 +12,5 @@ for player in data:
         fa.append({'Name': player['player']['fullName']})
 
 df = pd.DataFrame(fa)
+df.to_csv('fa.csv')
 print(df)
