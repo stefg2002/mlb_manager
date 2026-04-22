@@ -1,12 +1,13 @@
+from sqlalchemy import create_engine
 import pandas as pd
 import math
 import re
-import glob
-import os
+
 import requests
 from bs4 import BeautifulSoup
 from unidecode import unidecode
 
+from config import settings
 
 def get_additional_cbt(player,extra_cbt):
     for i,value in extra_cbt.iterrows():
@@ -70,6 +71,9 @@ def get_additional_cbt(player,extra_cbt):
     #                         return 3
 
 def scrape():
+
+    engine = create_engine(settings.postgres_url.encoded_string)
+
     response = requests.get('https://legacy.baseballprospectus.com/compensation/cots/')
 
     soup = BeautifulSoup(response.text,'html.parser')
@@ -97,6 +101,7 @@ def scrape():
         elif "/pub" in link:
             spreadsheet_link = link.split('/pub')[0] + '/pub?output=csv'
 
+        print(f'Parsing csv from {spreadsheet_link}')
         csv = pd.read_csv(spreadsheet_link,header=None,skiprows=9,dtype=str)
 
         # grab only the first box
@@ -133,7 +138,7 @@ def scrape():
 
             cbt = player[18].replace("$","").replace(",","") if isinstance(player[18],str) else "0"
             extra = get_additional_cbt(player,extra_cbt)
-            ls.append({'Name': name, 'Normalized Name': normalized_name, 'CBT': int(cbt) + int(extra)})
+            ls.append({'name': name, 'normalized_name': normalized_name, 'cbt': int(cbt) + int(extra)})
             print(normalized_name)
 
         payroll = pd.DataFrame(ls)
@@ -148,7 +153,14 @@ def scrape():
         # dead_payroll = pd.DataFrame(ls)
 
         contracts=pd.concat([contracts,payroll],ignore_index=True)
-    return contracts    
     
+    contracts.to_sql('players_cots', con=engine, if_exists='replace', index=False)
+    with engine.connect() as conn:
+        conn.execute('ALTER TABLE `players_mlb` ADD PRIMARY KEY(`id`);')
+
+    return contracts    
+
+if __name__ == '__main__':
+    scrape()
 
 
