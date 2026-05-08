@@ -87,21 +87,23 @@ def scrape():
 
         ls.append(table.find_all('a', href=lambda x: x and 'https://docs.google.com' in x))
 
-    a = [item for sub in ls for item in sub]
+    flat_ls = [item for sub in ls for item in sub]
 
     links = []
-    for link in a:
+    for link in flat_ls:
         links.append(link.get('href'))               
 
     contracts=pd.DataFrame()
     for link in links:
-        
         if '/edit' in link:
             spreadsheet_link = link.split('/edit')[0] + '/export?format=csv'
         elif "/pub" in link:
             spreadsheet_link = link.split('/pub')[0] + '/pub?output=csv'
 
         print(f'Parsing csv from {spreadsheet_link}')
+        csv = pd.read_csv(spreadsheet_link, header=None, skiprows=1, nrows=4)
+        team = f'{csv.iloc[0,0]} {csv.iloc[2,0]}'
+
         csv = pd.read_csv(spreadsheet_link,header=None,skiprows=9,dtype=str)
 
         # grab only the first box
@@ -138,7 +140,7 @@ def scrape():
 
             cbt = player[18].replace("$","").replace(",","") if isinstance(player[18],str) else "0"
             extra = get_additional_cbt(player,extra_cbt)
-            ls.append({'name': name, 'normalized_name': normalized_name, 'cbt': int(cbt) + int(extra)})
+            ls.append({'name': name, 'normalized_name': normalized_name, 'cbt': int(cbt) + int(extra), 'team_name': team.lower()})
             print(normalized_name)
 
         payroll = pd.DataFrame(ls)
