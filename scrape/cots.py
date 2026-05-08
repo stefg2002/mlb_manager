@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 import pandas as pd
 import math
 import re
@@ -72,7 +72,7 @@ def get_additional_cbt(player,extra_cbt):
 
 def scrape():
 
-    engine = create_engine(settings.postgres_url.encoded_string)
+    engine = create_engine(str(settings.postgres_url))
 
     response = requests.get('https://legacy.baseballprospectus.com/compensation/cots/')
 
@@ -143,6 +143,7 @@ def scrape():
 
         payroll = pd.DataFrame(ls)
         
+        
         #Non-roster CBT additions (dead money) - players with guaranteed contracts not on the 40-man roster
         # ls = []
         # for i,player in extra_cbt.iterrows():
@@ -154,9 +155,11 @@ def scrape():
 
         contracts=pd.concat([contracts,payroll],ignore_index=True)
     
+    contracts['id'] = range(1, len(contracts) + 1)
     contracts.to_sql('players_cots', con=engine, if_exists='replace', index=False)
     with engine.connect() as conn:
-        conn.execute('ALTER TABLE `players_mlb` ADD PRIMARY KEY(`id`);')
+        conn.execute(text('ALTER TABLE players_cots ADD PRIMARY KEY (id);'))
+        conn.commit()
 
     return contracts    
 

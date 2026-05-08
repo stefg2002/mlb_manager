@@ -5,7 +5,9 @@ from rapidfuzz import fuzz, process
 from sqlalchemy import create_engine
 import pandas as pd
 
-engine = create_engine('postgresql://postgres:syncopate@192.168.1.78:5432/scrape_database')
+from config import settings
+
+engine = create_engine(str(settings.postgres_url))
 
 contracts = cots_scrape()
 print("-----Scraped cots-------")
@@ -43,4 +45,4 @@ mat_df=pd.DataFrame(matches)
 non_df = pd.DataFrame(non_matches)
 # non_df.to_csv('out_non.csv')
 
-mat_df.to_sql('mlb_match', con=engine, if_exists='append', index=False)
+mat_df.to_sql('mlb_match', con=engine, if_exists='replace', index=False)

@@ -69,21 +69,14 @@ def scrape():
             players.append({'first_name': first_name, 'last_name': last_name, 'normalized_name': normalized_name, 'age': age, 'position': position, 'bats': bats, 'throws': throws, 'mlb_id': mlb_id, 'team_id': player['Team ID']})
             print(f"Parsed {normalized_name}")
         
-
     players_df = pd.DataFrame(players)
+    players_df['id'] = range(1, len(players_df) + 1)
 
-    players_df.to_sql('players_mlb_temp', con=engine, if_exists='replace', index=False)
-    with engine.begin() as conn:
-        conn.execute(text("""
-            MERGE INTO players_mlb AS t
-            USING players_mlb_temp AS s
-            ON t.mlb_id = s.mlb_id
-            WHEN MATCHED THEN
-                UPDATE SET first_name=s.first_name, last_name=s.last_name, normalized_name=s.normalized_name, age=s.age, position=s.position, bats=s.bats, throws=s.throws, mlb_id=s.mlb_id, team_id=s.team_id
-            WHEN NOT MATCHED THEN
-                INSERT (first_name, last_name, normalized_name, age, position, bats, throws, mlb_id, team_id) VALUES (s.first_name, s.last_name, s.normalized_name, s.age, s.position, s.bats, s.throws, s.mlb_id, s.team_id);
-        """))
-        conn.execute(text("DROP TABLE IF EXISTS players_mlb_temp"))
+
+    players_df.to_sql('players_mlb', con=engine, if_exists='replace', index=False)
+    with engine.connect() as conn:
+        conn.execute(text('ALTER TABLE players_mlb ADD PRIMARY KEY (id);'))
+        conn.commit()
 
     return players_df
 
