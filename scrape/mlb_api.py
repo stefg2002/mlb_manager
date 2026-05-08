@@ -46,7 +46,7 @@ def get_player_links(teams):
     links = []
     for team in teams:
         for player in team['Roster']:
-            links.append({'Link': f'/api/v1/people/{player}', 'Team ID': team['MLBID']})
+            links.append({'Link': f'/api/v1/people/{player}', 'Team Name': team['Full Name']})
     return links
 
 def scrape():
@@ -66,7 +66,7 @@ def scrape():
         for player in links:
             s = session.get(f"https://statsapi.mlb.com{player['Link']}")
             first_name, last_name, normalized_name, age, position, bats, throws, mlb_id = get_player_info(s)
-            players.append({'first_name': first_name, 'last_name': last_name, 'normalized_name': normalized_name, 'age': age, 'position': position, 'bats': bats, 'throws': throws, 'mlb_id': mlb_id, 'team_id': player['Team ID']})
+            players.append({'first_name': first_name, 'last_name': last_name, 'normalized_name': normalized_name, 'age': age, 'position': position, 'bats': bats, 'throws': throws, 'mlb_id': mlb_id, 'team_name': player['Team Name']})
             print(f"Parsed {normalized_name}")
         
     players_df = pd.DataFrame(players)
