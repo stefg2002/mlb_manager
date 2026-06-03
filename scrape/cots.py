@@ -102,7 +102,12 @@ def scrape():
 
         print(f'Parsing csv from {spreadsheet_link}')
         csv = pd.read_csv(spreadsheet_link, header=None, skiprows=1, nrows=4)
-        team = f'{csv.iloc[0,0]} {csv.iloc[2,0]}'
+        city = csv.iloc[0,0]
+        nickname = csv.iloc[2,0]
+        if isinstance(nickname, str):
+            team = f'{nickname}'
+        else:
+            team = f'{city}'
 
         csv = pd.read_csv(spreadsheet_link,header=None,skiprows=9,dtype=str)
 
