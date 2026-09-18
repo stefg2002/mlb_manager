@@ -163,9 +163,9 @@ def scrape():
         contracts=pd.concat([contracts,payroll],ignore_index=True)
     
     contracts['id'] = range(1, len(contracts) + 1)
-    contracts.to_sql('players_cots', con=engine, if_exists='replace', index=False)
+    contracts.to_sql('contracts', con=engine, if_exists='replace', index=False)
     with engine.connect() as conn:
-        conn.execute(text('ALTER TABLE players_cots ADD PRIMARY KEY (id);'))
+        conn.execute(text('ALTER TABLE contracts ADD PRIMARY KEY (id);'))
         conn.commit()
 
     return contracts    

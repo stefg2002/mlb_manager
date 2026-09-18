@@ -10,8 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.sessions import SessionMiddleware
 
-from routers import users, google
-from google_auth import oauth
+from routers import users
 
 from db import engine
 
@@ -43,7 +42,6 @@ app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=True
 Initializes API routes
 """
 app.include_router(users.router,prefix="/api/users",tags=["Users"]) 
-app.include_router(google.router, prefix="/api/google", tags=["Google"])
 
 #TODO: Add exception handling
 @app.exception_handler

@@ -61,9 +61,9 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: An
         payload = jwt.decode(token, settings.auth.secret_key.get_secret_value(), algorithms=[settings.auth.algorithm], options={"require": ["exp", "sub"]})
     except InvalidTokenError:
        raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, 
-                detail="Could not validate credentials",
-                headers={"WWW-Authenticate": "Bearer"}
+            status_code=status.HTTP_401_UNAUTHORIZED, 
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"}
         )
     
     user_id: str = payload.get("sub")

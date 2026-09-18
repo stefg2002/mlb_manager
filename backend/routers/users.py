@@ -5,7 +5,7 @@ from datetime import timedelta
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
-from sqlalchemy import select
+from sqlalchemy import select, text
 
 from fastapi import APIRouter, HTTPException, status, Request, Depends
 
@@ -92,18 +92,17 @@ async def login(db: Annotated[AsyncSession, Depends(get_db)], form_data: Annotat
     access_token = create_access_token(data={"sub": str(user.id)}, expires_delta=access_token_expires)
     return Token(access_token=access_token, token_type="bearer")
 
-# @router.get("/google")
-# async def get_google_user(request: Request):
-#     user_session = request.session.get("user")
-#     if not user_session:
-#         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authenticated")
-#     return {
-#         "session_data": user_session
-#     }
 
 @router.get("/me", response_model=UserGetPrivate)
 async def get_cur_user(request: Request, current_user: CurrentUser):
     return current_user
+
+# @router.get("/test")
+# async def test(team_name: str, request: Request, current_user: CurrentUser, db: Annotated[AsyncSession, Depends(get_scrape_db)]):
+#     # data = await db.execute(text("SELECT last_name FROM public.players_mlb WHERE team_name='blue jays'"))
+#     data = await db.execute(select(scrape_models.Player).where(scrape_models.Player.team_name == team_name))
+#     players = data.scalars().all()
+#     return players
 
 @router.get("/{user_id}", response_model=UserGetPublic)
 async def get_user(current_user: CurrentUser, db: Annotated[AsyncSession, Depends(get_db)]):

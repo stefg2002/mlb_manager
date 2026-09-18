@@ -3,6 +3,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class DBSettings(BaseModel):
     url: str
+    scrape_url: str
 
 class AuthSettings(BaseModel):
     secret_key: SecretStr

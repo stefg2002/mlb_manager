@@ -74,9 +74,9 @@ def scrape():
     players_df['id'] = range(1, len(players_df) + 1)
 
 
-    players_df.to_sql('players_mlb', con=engine, if_exists='replace', index=False)
+    players_df.to_sql('players', con=engine, if_exists='replace', index=False)
     with engine.connect() as conn:
-        conn.execute(text('ALTER TABLE players_mlb ADD PRIMARY KEY (id);'))
+        conn.execute(text('ALTER TABLE players ADD PRIMARY KEY (id);'))
         conn.commit()
 
     return players_df
